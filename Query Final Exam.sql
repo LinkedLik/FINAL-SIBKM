@@ -4,7 +4,7 @@ GO
 USE Employee_Management
 GO
 
-CREATE TABLE tbl_job_history(
+CREATE TABLE tbl_job_histories(
 employee INT PRIMARY KEY,
 start_date DATE NOT NULL,
 end_date DATE,
@@ -90,3 +90,39 @@ id INT PRIMARY KEY IDENTITY(1001,1),
 account INT NOT NULL,
 role INT NOT NULL
 );
+
+ALTER TABLE tbl_account ADD CONSTRAINT FK_tbl_account_tbl_employees FOREIGN KEY(id)
+REFERENCES tbl_employees (id);
+
+ALTER TABLE tbl_account_roles ADD CONSTRAINT FK_tbl_account_roles_tbl_account FOREIGN KEY(account)
+REFERENCES tbl_account (id);
+
+ALTER TABLE tbl_account_roles ADD CONSTRAINT FK_tbl_account_roles_tbl_roles FOREIGN KEY(role)
+REFERENCES tbl_roles (id);
+
+ALTER TABLE tbl_countries ADD CONSTRAINT FK_tbl_countries_tbl_regions FOREIGN KEY(region)
+REFERENCES tbl_regions (id);
+
+ALTER TABLE tbl_departments ADD CONSTRAINT FK_tbl_departments_tbl_locations FOREIGN KEY(location)
+REFERENCES tbl_locations (id);
+
+ALTER TABLE tbl_employees ADD CONSTRAINT FK_tbl_employees_tbl_departments FOREIGN KEY(id)
+REFERENCES tbl_departments (id);
+
+ALTER TABLE tbl_employees ADD CONSTRAINT FK_tbl_employees_tbl_employees FOREIGN KEY(manager)
+REFERENCES tbl_employees (id);
+
+ALTER TABLE tbl_employees ADD CONSTRAINT FK_tbl_employees_tbl_jobs FOREIGN KEY(job)
+REFERENCES tbl_jobs (id);
+
+ALTER TABLE tbl_job_histories ADD CONSTRAINT FK_tbl_job_histories_tbl_departments FOREIGN KEY(department)
+REFERENCES tbl_departments (id);
+
+ALTER TABLE tbl_job_histories ADD CONSTRAINT FK_tbl_job_histories_tbl_employees FOREIGN KEY(employee)
+REFERENCES tbl_employees (id);
+
+ALTER TABLE tbl_job_histories ADD CONSTRAINT FK_tbl_job_histories_tbl_jobs FOREIGN KEY(job)
+REFERENCES tbl_jobs (id);
+
+ALTER TABLE tbl_locations ADD CONSTRAINT FK_tbl_locations_tbl_countries FOREIGN KEY(country)
+REFERENCES tbl_countries (id);
