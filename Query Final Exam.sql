@@ -126,3 +126,9 @@ REFERENCES tbl_jobs (id);
 
 ALTER TABLE tbl_locations ADD CONSTRAINT FK_tbl_locations_tbl_countries FOREIGN KEY(country)
 REFERENCES tbl_countries (id);
+
+ALTER TABLE tbl_role_permissions ADD CONSTRAINT FK_tbl_role_permissions_tbl_permissions FOREIGN KEY(permission)
+REFERENCES tbl_permissions (id);
+
+ALTER TABLE tbl_role_permissions ADD CONSTRAINT FK_tbl_role_permissions_tbl_roles FOREIGN KEY(role)
+REFERENCES tbl_roles (id);
