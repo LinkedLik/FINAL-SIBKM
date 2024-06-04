@@ -151,3 +151,7 @@ AS
 INSERT INTO tbl_employees VALUES(@namadepan, @namabelakang, @jeniskelamin, @email, @phone, @tanggalgabung, @gaji, @managjer, @kerjaan, @department);
 
 EXEC usp_register @namadepan = 'joe', @namabelakang = 'doe', @jeniskelamin = 'male', @email = 'joed@test.com', @phone = '654846512454', @tanggalgabung = '20-MAR-2021', @gaji = 2000, @managjer = '', @kerjaan = 'IT', @department = 1;
+
+CREATE PROCEDURE job_regis @jobsid VARCHAR(10), @jobname VARCHAR(35), @minsal INT, @maxsal INT
+AS
+INSERT INTO tbl_jobs VALUES (@jobsid, @jobname, @minsal, @maxsal);
