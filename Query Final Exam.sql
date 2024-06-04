@@ -132,3 +132,22 @@ REFERENCES tbl_permissions (id);
 
 ALTER TABLE tbl_role_permissions ADD CONSTRAINT FK_tbl_role_permissions_tbl_roles FOREIGN KEY(role)
 REFERENCES tbl_roles (id);
+
+ALTER TABLE tbl_employees ADD CONSTRAINT cek_gender CHECK(gender IN ('MALE','FEMALE'));
+
+CREATE PROCEDURE usp_login @user VARCHAR(25), @password VARCHAR(255)
+AS
+SELECT username, password
+FROM tbl_account
+WHERE username = @user AND password = @password;
+
+EXEC usp_login @user = 'admin', @password = 'password';
+
+CREATE PROCEDURE usp_register @namadepan VARCHAR(25), 
+@namabelakang VARCHAR(25), @jeniskelamin VARCHAR(10), @email VARCHAR(25),
+@phone VARCHAR(25), @tanggalgabung DATE, @gaji INT, @managjer INT, 
+@kerjaan VARCHAR(10), @department INT
+AS
+INSERT INTO tbl_employees VALUES(@namadepan, @namabelakang, @jeniskelamin, @email, @phone, @tanggalgabung, @gaji, @managjer, @kerjaan, @department);
+
+EXEC usp_register @namadepan = 'joe', @namabelakang = 'doe', @jeniskelamin = 'male', @email = 'joed@test.com', @phone = '654846512454', @tanggalgabung = '20-MAR-2021', @gaji = 2000, @managjer = '', @kerjaan = 'IT', @department = 1;
