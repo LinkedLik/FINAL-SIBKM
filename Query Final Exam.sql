@@ -44,7 +44,7 @@ CREATE TABLE tbl_locations(
 id INT PRIMARY KEY IDENTITY (1001,1),
 street_address VARCHAR(40),
 postal_code VARCHAR(12),
-city VARCHAR(3) NOT NULL,
+city VARCHAR(30) NOT NULL,
 state_province VARCHAR(25),
 country CHAR(3) NOT NULL
 );
@@ -135,6 +135,8 @@ REFERENCES tbl_roles (id);
 
 ALTER TABLE tbl_employees ADD CONSTRAINT cek_gender CHECK(gender IN ('MALE','FEMALE'));
 
+ALTER TABLE tbl_employees ADD CONSTRAINT check_email CHECK(dbo.func_email_format(email) = 1);
+
 CREATE PROCEDURE usp_login @user VARCHAR(25), @password VARCHAR(255)
 AS
 SELECT username, password
@@ -143,15 +145,105 @@ WHERE username = @user AND password = @password;
 
 EXEC usp_login @user = 'admin', @password = 'password';
 
-CREATE PROCEDURE usp_register @namadepan VARCHAR(25), 
+CREATE PROCEDURE usp_register @id INT, @namadepan VARCHAR(25), 
 @namabelakang VARCHAR(25), @jeniskelamin VARCHAR(10), @email VARCHAR(25),
 @phone VARCHAR(25), @tanggalgabung DATE, @gaji INT, @managjer INT, 
 @kerjaan VARCHAR(10), @department INT
 AS
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_employees WHERE id = @id)
+BEGIN
+PRINT'Employee Already Exist'
+END
+ELSE
+BEGIN
 INSERT INTO tbl_employees VALUES(@namadepan, @namabelakang, @jeniskelamin, @email, @phone, @tanggalgabung, @gaji, @managjer, @kerjaan, @department);
+END
+END
+
+DROP PROCEDURE usp_register;
 
 EXEC usp_register @namadepan = 'joe', @namabelakang = 'doe', @jeniskelamin = 'male', @email = 'joed@test.com', @phone = '654846512454', @tanggalgabung = '20-MAR-2021', @gaji = 2000, @managjer = '', @kerjaan = 'IT', @department = 1;
 
 CREATE PROCEDURE job_regis @jobsid VARCHAR(10), @jobname VARCHAR(35), @minsal INT, @maxsal INT
 AS
 INSERT INTO tbl_jobs VALUES (@jobsid, @jobname, @minsal, @maxsal);
+
+CREATE VIEW vw_employee_details AS (
+SELECT tbl_employees.id, CONCAT(tbl_employees.first_name, ' ', tbl_employees.last_name) AS full_name, tbl_employees.gender, tbl_employees.email, tbl_employees.phone, tbl_employees.hire_date, tbl_job_histories.status, 
+                  tbl_employees.salary, tbl_employees.manager, CONCAT(tbl_employees.first_name, ' ', tbl_employees.last_name) AS manager_name, tbl_locations.city, tbl_roles.name, tbl_departments.name AS department, 
+                  tbl_account.username
+FROM     tbl_employees INNER JOIN
+                  tbl_departments ON tbl_employees.id = tbl_departments.id INNER JOIN
+                  tbl_roles ON tbl_employees.id = tbl_roles.id INNER JOIN
+                  tbl_locations ON tbl_departments.location = tbl_locations.id INNER JOIN
+                  tbl_job_histories ON tbl_employees.id = tbl_job_histories.employee AND tbl_departments.id = tbl_job_histories.department INNER JOIN
+                  tbl_account ON tbl_employees.id = tbl_account.id
+WHERE tbl_employees.id <> tbl_employees.manager
+AND tbl_employees.first_name = tbl_employees.manager
+);
+
+SELECT * FROM vw_employee_details;
+
+CREATE PROCEDURE loc_regis @id INT, @jalan VARCHAR(40), 
+@kodepos VARCHAR(12), @kota VARCHAR(30), @provinsi VARCHAR(25), @negara CHAR(3)
+AS
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_locations WHERE id = @id)
+BEGIN
+PRINT 'Location already exist'
+END
+ELSE
+BEGIN
+INSERT INTO tbl_locations VALUES (@jalan, @kodepos, @kota, @provinsi, @negara)
+END
+END
+
+EXEC loc_regis @id = 1001, @jalan = 'tanjung duren', @kodepos = '11400', @kota = 'jakarta barat', @provinsi = 'jakarta', @negara = 'IND';
+
+CREATE PROCEDURE country_regis @id CHAR(3), @negara VARCHAR(40), @wilayah INT
+AS
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_countries WHERE id = @id)
+BEGIN 
+PRINT 'Country already exist'
+END
+ELSE
+BEGIN
+INSERT INTO tbl_countries VALUES (@id, @negara, @wilayah)
+END
+END
+
+CREATE PROCEDURE region_regis @id INT, @region VARCHAR(25)
+AS
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_regions WHERE id = @id)
+BEGIN
+PRINT 'Region already exist'
+END
+ELSE
+BEGIN
+INSERT INTO tbl_regions VALUES (@region)
+END
+END
+
+CREATE FUNCTION func_email_format(
+	@email VARCHAR(25)
+) RETURNS BIT AS
+BEGIN
+DECLARE @emailtext VARCHAR(25)
+DECLARE @emailval AS BIT
+SET @emailtext =  LTRIM(RTRIM(ISNULL(@email,'')))
+SET @emailval = CASE WHEN @emailtext = '' THEN 0
+					WHEN @emailtext LIKE '% %' THEN 0
+					WHEN @emailtext LIKE ('%[]"(),;:<>\]%') THEN 0
+					WHEN SUBSTRING(@emailtext,CHARINDEX('@',@emailtext),LEN(@emailtext)) LIKE ('%[]!#$%&^*()[]{}\|;:"=-+-%/?><.,') THEN 0
+					WHEN (LEFT(@emailtext,1) LIKE ('[-_.+]') OR RIGHT(@emailtext,1) LIKE ('[-_.+]')) THEN 0
+					WHEN @emailtext LIKE '%[%' OR @emailtext like'%]%' THEN 0
+					WHEN @emailtext LIKE '%@%@%' THEN 0
+					WHEN @emailtext NOT LIKE '_%@_%._%' THEN 0
+					ELSE 
+					1
+				END
+		RETURN @emailval
+	END
