@@ -106,7 +106,7 @@ REFERENCES tbl_regions (id);
 ALTER TABLE tbl_departments ADD CONSTRAINT FK_tbl_departments_tbl_locations FOREIGN KEY(location)
 REFERENCES tbl_locations (id);
 
-ALTER TABLE tbl_employees ADD CONSTRAINT FK_tbl_employees_tbl_departments FOREIGN KEY(id)
+ALTER TABLE tbl_employees ADD CONSTRAINT FK_tbl_employees_tbl_departments FOREIGN KEY(department)
 REFERENCES tbl_departments (id);
 
 ALTER TABLE tbl_employees ADD CONSTRAINT FK_tbl_employees_tbl_employees FOREIGN KEY(manager)
@@ -135,7 +135,11 @@ REFERENCES tbl_roles (id);
 
 ALTER TABLE tbl_employees ADD CONSTRAINT cek_gender CHECK(gender IN ('MALE','FEMALE'));
 
+ALTER TABLE tbl_employees ADD CONSTRAINT gender_check CHECK(dbo.func_gender(gender) = 1);
+
 ALTER TABLE tbl_employees ADD CONSTRAINT check_email CHECK(dbo.func_email_format(email) = 1);
+
+ALTER TABLE tbl_account ADD CONSTRAINT check_password CHECK(dbo.func_password_policy(password) = 1);
 
 CREATE PROCEDURE usp_login @user VARCHAR(25), @password VARCHAR(255)
 AS
@@ -167,7 +171,16 @@ EXEC usp_register @namadepan = 'joe', @namabelakang = 'doe', @jeniskelamin = 'ma
 
 CREATE PROCEDURE job_regis @jobsid VARCHAR(10), @jobname VARCHAR(35), @minsal INT, @maxsal INT
 AS
-INSERT INTO tbl_jobs VALUES (@jobsid, @jobname, @minsal, @maxsal);
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_employees WHERE id = @jobsid)
+BEGIN 
+PRINT ('Jobs Already Exist')
+END
+ELSE
+BEGIN
+INSERT INTO tbl_jobs VALUES (@jobsid, @jobname, @minsal, @maxsal)
+END
+END
 
 CREATE VIEW vw_employee_details AS (
 SELECT tbl_employees.id, CONCAT(tbl_employees.first_name, ' ', tbl_employees.last_name) AS full_name, tbl_employees.gender, tbl_employees.email, tbl_employees.phone, tbl_employees.hire_date, tbl_job_histories.status, 
@@ -247,3 +260,57 @@ SET @emailval = CASE WHEN @emailtext = '' THEN 0
 				END
 		RETURN @emailval
 	END
+
+CREATE FUNCTION func_password_policy(
+@password VARCHAR(255)
+)
+RETURNS INT
+BEGIN
+DECLARE @validate INT
+IF LEN(@password) >8 AND PATINDEX('%[0-9]%',@password) > 0 AND PATINDEX('%[a-zA-Z]%', @password) > 0
+SET @validate = 1
+ELSE
+SET @validate = 0
+RETURN @validate
+END
+
+CREATE FUNCTION func_gender(
+@gender VARCHAR(10)
+)
+RETURNS INT
+BEGIN
+DECLARE @validate INT
+SET @validate = CASE WHEN @gender = 'MALE' THEN 1
+					WHEN @gender = 'Male' THEN 1
+					WHEN @gender = 'male' THEN 1
+					WHEN @gender = 'FEMALE' THEN 1
+					WHEN @gender = 'Female' THEN 1
+					WHEN @gender = 'female' THEN 1
+			ELSE
+			0
+		END
+		RETURN @validate
+	END
+
+
+CREATE TRIGGER tr_insert_employee 
+ON tbl_employees
+AFTER INSERT
+AS
+BEGIN
+INSERT INTO tbl_job_histories(employee, start_date, status, job, department)
+SELECT ID, getdate(), 'Active', job, department FROM INSERTED;
+END
+
+CREATE TRIGGER tr_update_employee_job
+ON tbl_employees
+AFTER UPDATE
+AS
+BEGIN
+UPDATE tbl_job_histories
+SET status = 'Hand Over'
+FROM tbl_job_histories
+INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
+END
+
+SELECT * FROM tbl_employees;
