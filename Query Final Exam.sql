@@ -314,3 +314,4 @@ INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
 END
 
 SELECT * FROM tbl_employees;
+SELECT * FROM tbl_job_histories;
