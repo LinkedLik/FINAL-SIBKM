@@ -146,7 +146,7 @@ CREATE PROCEDURE usp_login
 @password VARCHAR(255)
 AS
 BEGIN
-IF EXISTS (SELECT 1 FROM tbl_account WHERE username = @user)
+IF EXISTS (SELECT 1 FROM tbl_account WHERE username = @user AND password = @password)
 BEGIN 
 PRINT 'Login Sucess'
 END
@@ -401,6 +401,9 @@ BEGIN
 	IF EXISTS(SELECT 1 FROM tbl_account WHERE otp = @otp)
 	BEGIN
 	IF EXISTS(SELECT 1 FROM tbl_account WHERE is_expired = 0)
+	UPDATE tbl_account
+	SET password = @confirmpassword, is_used = 1
+	ELSE
 	PRINT 'OTP Expired'
 	END
 	ELSE
@@ -409,7 +412,43 @@ BEGIN
 	ELSE
 	PRINT 'OTP is Incorrect'
 	END
-	UPDATE tbl_account
-	SET password = @confirmpassword, is_used = 1
+	ELSE
+	PRINT 'Password not Match'
 	END
+	ELSE
+	PRINT 'Account not Registered'
 END
+
+DROP PROCEDURE usp_forgot_password;
+
+EXEC usp_login @user = 'bpeasee0', @password =  'cE2#e,z,G/?';
+EXEC usp_login @user = 'bpeasee0', @password =  'cE2#e,z,G/';
+
+select * from tbl_account;
+SELECT * FROM tbl_jobs;
+select * from tbl_employees;
+EXEC usp_forgot_password @email = 'ffeldberg0@comsenz.com', @newpassword = 'test', @confirmpassword = 'tes', @otp = '2013';
+
+
+UPDATE tbl_employees
+SET job = 1103
+WHERE ID = 100012;
+
+select * from tbl_job_histories;
+
+CREATE PROCEDURE permission_regis
+@id INT,
+@name VARCHAR(100)
+AS
+BEGIN
+IF EXISTS(SELECT 1 FROM tbl_permissions WHERE id = @id)
+BEGIN
+PRINT 'Permissions Already Exists'
+END
+ELSE
+BEGIN
+INSERT INTO tbl_permissions VALUES (@name)
+END
+END
+
+SELECT * FROM tbl_permissions;
