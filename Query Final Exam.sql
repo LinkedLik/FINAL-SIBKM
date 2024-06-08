@@ -461,3 +461,21 @@ UPDATE tbl_employees
 SET manager = 100012
 WHERE ID = 100013
 
+CREATE TRIGGER tr_delete_employee
+ON tbl_employees
+AFTER DELETE
+AS
+BEGIN
+UPDATE tbl_job_histories
+SET status = 'Resign', end_date = GETDATE()
+FROM tbl_job_histories
+INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
+END
+
+DROP TRIGGER dbo.tr_delete_employee
+
+BEGIN TRANSACTION;
+SELECT * FROM tbl_job_histories
+DELETE FROM tbl_employees
+WHERE ID = 100025;
+ROLLBACK;
