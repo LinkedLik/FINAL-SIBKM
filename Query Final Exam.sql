@@ -384,3 +384,32 @@ BEGIN
 PRINT 'Data Departement tidak ada'
 END
 END
+
+CREATE PROCEDURE usp_forgot_password
+@email VARCHAR(25),
+@newpassword VARCHAR(255),
+@confirmpassword VARCHAR(255),
+@otp INT
+AS
+BEGIN
+IF EXISTS(SELECT 1 FROM tbl_employees WHERE email = @email)
+BEGIN
+	IF EXISTS(SELECT 1 FROM tbl_account)
+	BEGIN
+	IF @newpassword = @confirmpassword
+	BEGIN
+	IF EXISTS(SELECT 1 FROM tbl_account WHERE otp = @otp)
+	BEGIN
+	IF EXISTS(SELECT 1 FROM tbl_account WHERE is_expired = 0)
+	PRINT 'OTP Expired'
+	END
+	ELSE
+	PRINT 'OTP Already Used'
+	END
+	ELSE
+	PRINT 'OTP is Incorrect'
+	END
+	UPDATE tbl_account
+	SET password = @confirmpassword, is_used = 1
+	END
+END
