@@ -313,5 +313,20 @@ FROM tbl_job_histories
 INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
 END
 
-SELECT * FROM tbl_employees;
-SELECT * FROM tbl_job_histories;
+CREATE FUNCTION func_otp_generate(
+@otp INT
+)
+RETURNS INT
+AS 
+BEGIN
+DECLARE @digit INT;
+DECLARE @hash BIGINT = CONVERT(BIGINT, HASHBYTES('SHA2_256', CONVERT(VARBINARY, @otp)));
+WHILE LEN(@digit) < 6
+BEGIN
+SET @digit = @digit + CONVERT(VARCHAR, (@hash & 0xF));
+SET @hash = @hash >> 4;
+END
+RETURN @digit;
+END;
+
+SELECT * FROM tbl_account;
