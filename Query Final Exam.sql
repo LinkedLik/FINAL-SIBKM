@@ -313,6 +313,7 @@ FROM tbl_job_histories
 INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
 END
 
+/* Over Engineered
 CREATE FUNCTION func_otp_generate(
 @otp INT
 )
@@ -329,4 +330,48 @@ END
 RETURN @digit;
 END;
 
+
+CREATE FUNCTION func_otp_generate()
+RETURNS INT
+AS
+BEGIN
+    DECLARE @otp INT;
+    EXEC sp_executesql N'SET @otp = FLOOR(RAND() * 900000) + 100000;', N'@otp INT OUTPUT', @otp OUTPUT;
+    RETURN @otp;
+END;
+
+*/
+
+CREATE FUNCTION dbo.func_otp_generate(@seed INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @otp INT;
+    SET @otp = FLOOR(ABS(CHECKSUM(@seed)) % 900000) + 100000;
+    RETURN @otp;
+END;
+
+DECLARE @seed INT = DATEPART(ms, GETDATE());
+SELECT dbo.func_otp_generate(@seed) AS OTP;
+
+DROP FUNCTION dbo.func_otp_generate;
+
 SELECT * FROM tbl_account;
+
+CREATE PROCEDURE usp_generate_otp
+@email VARCHAR(25),
+@otp INT,
+@generate INT OUTPUT,
+@input INT
+AS
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_employees WHERE email = @email)
+BEGIN
+EXEC @generate = dbo.func_otp_generate @input;
+UPDATE
+END
+ELSE
+BEGIN
+PRINT'Email tidak ditemukan'
+END
+END
