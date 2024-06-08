@@ -359,20 +359,17 @@ DROP FUNCTION dbo.func_otp_generate;
 SELECT * FROM tbl_account;
 SELECT * FROM tbl_employees;
 
-CREATE PROCEDURE usp_generate_otp
-@email VARCHAR(25),
-@otp INT,
-@generate INT OUTPUT,
-@input INT
+CREATE PROCEDURE dept_delete
+@id INT
 AS
 BEGIN
-IF EXISTS (SELECT 1 FROM tbl_employees WHERE email = @email)
-BEGIN
-EXEC @generate = dbo.func_otp_generate @input;
-UPDATE
+IF EXISTS(SELECT 1 FROM tbl_departments WHERE id = @id)
+BEGIN 
+DELETE FROM tbl_departments
+WHERE id = id
 END
 ELSE
 BEGIN
-PRINT'Email tidak ditemukan'
+PRINT 'Data Departement tidak ada'
 END
 END
