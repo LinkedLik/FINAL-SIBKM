@@ -194,18 +194,21 @@ END
 END
 
 CREATE VIEW vw_employee_details AS (
-SELECT tbl_employees.id, CONCAT(tbl_employees.first_name, ' ', tbl_employees.last_name) AS full_name, tbl_employees.gender, tbl_employees.email, tbl_employees.phone, tbl_employees.hire_date, tbl_job_histories.status, 
-                  tbl_employees.salary, tbl_employees.manager, CONCAT(tbl_employees.first_name, ' ', tbl_employees.last_name) AS manager_name, tbl_locations.city, tbl_roles.name, tbl_departments.name AS department, 
-                  tbl_account.username
+SELECT tbl_employees.id, tbl_account.username, CONCAT(tbl_employees.first_name, ' ', tbl_employees.last_name) AS Name, tbl_employees.gender, tbl_employees.email, tbl_employees.hire_date, tbl_employees.salary, 
+                  tbl_employees_1.id AS Manager_ID, CONCAT(tbl_employees_1.first_name, ' ', tbl_employees_1.last_name) AS Manager_name, tbl_jobs.title AS jobs,tbl_departments.name AS Department_name,  tbl_roles.name AS role, 
+                  tbl_locations.city,tbl_job_histories.status 
 FROM     tbl_employees INNER JOIN
-                  tbl_departments ON tbl_employees.id = tbl_departments.id INNER JOIN
-                  tbl_roles ON tbl_employees.id = tbl_roles.id INNER JOIN
-                  tbl_locations ON tbl_departments.location = tbl_locations.id INNER JOIN
-                  tbl_job_histories ON tbl_employees.id = tbl_job_histories.employee AND tbl_departments.id = tbl_job_histories.department INNER JOIN
-                  tbl_account ON tbl_employees.id = tbl_account.id
-WHERE tbl_employees.id <> tbl_employees.manager
-AND tbl_employees.first_name = tbl_employees.manager
+                  tbl_departments ON tbl_employees.department = tbl_departments.id INNER JOIN
+                  tbl_account ON tbl_employees.id = tbl_account.id INNER JOIN
+                  tbl_jobs ON tbl_employees.job = tbl_jobs.id INNER JOIN
+                  tbl_account_roles ON tbl_account.id = tbl_account_roles.account INNER JOIN
+                  tbl_roles ON tbl_account_roles.role = tbl_roles.id INNER JOIN
+                  tbl_job_histories ON tbl_employees.id = tbl_job_histories.employee AND tbl_departments.id = tbl_job_histories.department AND tbl_jobs.id = tbl_job_histories.job INNER JOIN
+                  tbl_employees AS tbl_employees_1 ON tbl_employees.manager = tbl_employees_1.id INNER JOIN
+                  tbl_locations ON tbl_departments.location = tbl_locations.id
 );
+
+DROP VIEW vw_employee_details;
 
 SELECT * FROM vw_employee_details;
 
@@ -452,3 +455,27 @@ END
 END
 
 SELECT * FROM tbl_permissions;
+
+SELECT * FROM tbl_employees;
+UPDATE tbl_employees
+SET manager = 100012
+WHERE ID = 100013
+
+CREATE TRIGGER tr_delete_employee
+ON tbl_employees
+AFTER DELETE
+AS
+BEGIN
+UPDATE tbl_job_histories
+SET status = 'Resign', end_date = GETDATE()
+FROM tbl_job_histories
+INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
+END
+
+DROP TRIGGER dbo.tr_delete_employee
+
+BEGIN TRANSACTION;
+SELECT * FROM tbl_job_histories
+DELETE FROM tbl_employees
+WHERE ID = 100025;
+ROLLBACK;
