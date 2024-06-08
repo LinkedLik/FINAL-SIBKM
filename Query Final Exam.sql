@@ -357,6 +357,7 @@ SELECT dbo.func_otp_generate(@seed) AS OTP;
 DROP FUNCTION dbo.func_otp_generate;
 
 SELECT * FROM tbl_account;
+SELECT * FROM tbl_employees;
 
 CREATE PROCEDURE usp_generate_otp
 @email VARCHAR(25),
