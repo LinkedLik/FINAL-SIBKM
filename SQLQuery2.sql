@@ -31,3 +31,186 @@ BEGIN
     FROM deleted d;
 END;
 
+CREATE PROCEDURE sp_delete_country
+    @country_id INT
+AS
+BEGIN
+    -- Check if the country exists
+    IF NOT EXISTS (SELECT 1 FROM tbl_countries WHERE id = @country_id)
+    BEGIN
+        RAISERROR ('Country not found', 16, 1);
+        RETURN;
+    END
+	    DELETE FROM tbl_countries
+    WHERE id = @country_id;
+
+SELECT 'Country deleted successfully' AS message;
+END
+
+EXEC sp_delete_country @country_id = 1;
+
+
+
+CREATE PROCEDURE sp_delete_region
+    @region_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_regions WHERE id = @region_id)
+    BEGIN
+        RAISERROR ('Region not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF EXISTS (SELECT 1 FROM tbl_countries WHERE id = @region_id)
+    BEGIN
+        RAISERROR ('Region has associated countries, cannot delete', 16, 1);
+        RETURN;
+    END
+
+    DELETE FROM tbl_regions
+    WHERE id = @region_id;
+
+    SELECT 'Region deleted successfully' AS message;
+END
+
+EXEC sp_delete_region @region_id = 1;
+
+CREATE PROCEDURE sp_delete_roles
+    @role_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_roles WHERE id = @role_id)
+    BEGIN
+        RAISERROR ('Role not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF EXISTS (SELECT 1 FROM tbl_roles WHERE id = @role_id)
+    BEGIN
+        RAISERROR ('Role is assigned to users, cannot delete', 16, 1);
+        RETURN;
+    END
+
+
+    DELETE FROM tbl_roles
+    WHERE id = @role_id;
+
+
+    SELECT 'Role deleted successfully' AS message;
+END
+
+EXEC sp_delete_roles @role_id = 1;
+
+CREATE PROCEDURE sp_delete_location
+    @location_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_locations WHERE id = @location_id)
+    BEGIN
+        RAISERROR ('Location not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF EXISTS (SELECT 1 FROM tbl_departments WHERE location = @location_id)
+    BEGIN
+        RAISERROR ('Location has associated assets, cannot delete', 16, 1);
+        RETURN;
+    END
+
+
+    DELETE FROM tbl_locations
+    WHERE id = @location_id;
+
+    SELECT 'Location deleted successfully' AS message;
+END
+
+EXEC sp_delete_location @location_id = 1;
+
+CREATE PROCEDURE sp_delete_department
+    @department_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_departments WHERE id = @department_id)
+    BEGIN
+        RAISERROR ('Department not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF EXISTS (SELECT 1 FROM tbl_employees WHERE id = @department_id)
+    BEGIN
+        RAISERROR ('Department has associated employees, cannot delete', 16, 1);
+        RETURN;
+    END
+
+
+    DELETE FROM tbl_departments
+    WHERE id = @department_id;
+
+
+    SELECT 'Department deleted successfully' AS message;
+END
+EXEC sp_delete_department @department_id = 1;
+
+CREATE PROCEDURE sp_delete_job
+    @job_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_jobs WHERE id = @job_id)
+    BEGIN
+        RAISERROR ('Job not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF EXISTS (SELECT 1 FROM tbl_job_history WHERE job = @job_id)
+    BEGIN
+        RAISERROR ('Job has associated job steps, cannot delete', 16, 1);
+        RETURN;
+    END
+
+
+    DELETE FROM tbl_jobs
+    WHERE id = @job_id;
+
+
+    SELECT 'Job deleted successfully' AS message;
+END
+EXEC sp_delete_job @job_id = 1;
+
+CREATE PROCEDURE sp_delete_employee
+    @employee_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_employees WHERE id = @employee_id)
+    BEGIN
+        RAISERROR ('Employee not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF EXISTS (SELECT 1 FROM tbl_job_history WHERE employee = @employee_id)
+    OR EXISTS (SELECT 1 FROM tbl_jobs WHERE id = @employee_id)
+    BEGIN
+        RAISERROR ('Employee has associated data in other tables, cannot delete', 16, 1);
+        RETURN;
+    END
+
+
+    DELETE FROM tbl_employees
+    WHERE id = @employee_id;
+
+
+    SELECT 'Employee deleted successfully' AS message;
+END
+
+EXEC sp_delete_employee @employee_id = 1;
