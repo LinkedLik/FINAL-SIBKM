@@ -190,6 +190,38 @@ BEGIN
 END
 
 
+CREATE PROCEDURE sp_add_role(
+    @RoleID INT,
+    @Name VARCHAR(50))
+AS
+BEGIN
+	IF EXISTS (SELECT 1 FROM tbl_roles WHERE id = @RoleID)
+		BEGIN
+		PRINT'Role Already Exist'
+		END
+	ELSE
+		BEGIN
+		INSERT INTO tbl_roles
+		VALUES (@Name)
+	END
+END
+
+
+CREATE PROCEDURE sp_role_update(
+	@RoleID INT,
+	@Name VARCHAR(50))
+AS
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM tbl_roles WHERE id = @RoleID)
+	BEGIN
+		RAISERROR('Incorrect Role ID!',16,1);
+	END
+UPDATE tbl_roles
+	SET name = @Name
+	WHERE id = @RoleID
+END
+
+
 CREATE VIEW AccountRoles AS
 SELECT dbo.tbl_account.id AS [Account ID], dbo.tbl_roles.name AS Role, dbo.tbl_permissions.name AS Permissions
 FROM     dbo.tbl_account INNER JOIN
