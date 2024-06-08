@@ -274,3 +274,52 @@ BEGIN
 END
 
 EXEC sp_update_permission @permission_id = 1, @permission_role = '', @permission_description = '';
+
+CREATE PROCEDURE sp_update_employee
+    @employee_id INT,
+    @first_name VARCHAR(50),
+    @last_name VARCHAR(50),
+    @email VARCHAR(100),
+    @phone VARCHAR(20),
+    @job_title VARCHAR(50),
+    @department_id INT,
+    @manager_id INT,
+	@gender VARCHAR(20),
+	@hire_date VARCHAR(30),
+	@salary INT
+AS
+BEGIN
+    UPDATE tbl_employees
+    SET 
+        first_name = @first_name,
+        last_name = @last_name,
+		gender = @gender,
+        Email = @email,
+        Phone = @phone,
+		hire_date = @hire_date,
+		salary = @salary,
+        Job = @job_title,
+        Department = @department_id,
+        Manager = @manager_id
+    WHERE id = @employee_id;
+
+    IF @@ROWCOUNT = 0
+        RAISERROR ('Employee not found', 16, 1);
+
+    RETURN 0;
+END
+
+EXEC sp_update_employee 
+	@employee_id = '',
+	@first_name = '' ,
+	@last_name = '',
+	@email = '',
+	@phone = '' ,
+	@job_title = '',
+	@department_id = '',
+	@manager_id = '',
+	@gender = '',
+	@hire_date = '',
+	@salary = '';
+
+
