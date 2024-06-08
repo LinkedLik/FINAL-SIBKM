@@ -249,3 +249,28 @@ BEGIN
     SELECT 'Role permission deleted successfully' AS message;
 END
 EXEC sp_delete_role_permission @role_id, @permission_id = 1;
+
+CREATE PROCEDURE sp_update_permission
+    @permission_id INT,
+    @permission_role NVARCHAR(50),
+    @permission_description NVARCHAR(200)
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_role_permissions WHERE id = @permission_id)
+    BEGIN
+        RAISERROR ('Permission not found', 16, 1);
+        RETURN;
+    END
+
+
+    UPDATE tbl_role_permissions
+    SET role = @permission_role,
+        permission = @permission_description
+    WHERE id = @permission_id;
+
+
+    SELECT 'Permission updated successfully' AS message;
+END
+
+EXEC sp_update_permission @permission_id = 1, @permission_role = '', @permission_description = '';
