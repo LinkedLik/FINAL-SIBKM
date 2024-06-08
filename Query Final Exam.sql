@@ -141,11 +141,22 @@ ALTER TABLE tbl_employees ADD CONSTRAINT check_email CHECK(dbo.func_email_format
 
 ALTER TABLE tbl_account ADD CONSTRAINT check_password CHECK(dbo.func_password_policy(password) = 1);
 
-CREATE PROCEDURE usp_login @user VARCHAR(25), @password VARCHAR(255)
+CREATE PROCEDURE usp_login 
+@user VARCHAR(25), 
+@password VARCHAR(255)
 AS
-SELECT username, password
-FROM tbl_account
-WHERE username = @user AND password = @password;
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_account WHERE username = @user)
+BEGIN 
+PRINT 'Login Sucess'
+END
+ELSE 
+BEGIN
+PRINT 'Account not registered'
+END
+END
+
+DROP PROCEDURE usp_login;
 
 EXEC usp_login @user = 'admin', @password = 'password';
 
