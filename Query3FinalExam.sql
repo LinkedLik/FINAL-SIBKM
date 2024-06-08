@@ -137,9 +137,57 @@ BEGIN
 	WHERE id = @dept_id
 END
 
-SELECT * FROM tbl_departments
 
-EXEC sp_department_update 1011,'IT Support', 1010
+CREATE PROCEDURE sp_location_update(
+	@Loc_ID INT,
+	@StreetAddress VARCHAR(40),
+	@PostalCode VARCHAR(12),
+	@City VARCHAR(30),
+	@StateProvince VARCHAR(25),
+	@Country CHAR(3))
+AS
+BEGIN
+	IF NOT EXISTS(SELECT 1 FROM tbl_countries WHERE id = @Country)
+		BEGIN
+			RAISERROR('Incorrect Country ID!',16,1);
+			RETURN;
+		END
+		UPDATE tbl_locations
+		SET street_address = @StreetAddress,
+			postal_code = @PostalCode,
+			city = @City,
+			state_province = @StateProvince,
+			country = @Country
+		WHERE id = @Loc_ID
+END
+
+CREATE PROCEDURE sp_country_update(
+	@CountryId CHAR(3),
+	@Name VARCHAR(40),
+	@RegionId INT)
+AS
+BEGIN
+	IF NOT EXISTS(SELECT 1 FROM tbl_regions WHERE id = @RegionId)
+		BEGIN
+			RAISERROR('Incorrect Region ID!',16,1);
+			RETURN;
+		END
+		UPDATE tbl_countries
+		SET name = @Name,
+			region = @RegionId
+		WHERE id = @CountryId
+END
+
+
+CREATE PROCEDURE sp_region_update(
+	@RegionId INT,
+	@RegionName VARCHAR(25))
+AS
+BEGIN
+	UPDATE tbl_regions
+	SET name = @RegionName
+	WHERE id = @RegionId
+END
 
 
 CREATE VIEW AccountRoles AS
