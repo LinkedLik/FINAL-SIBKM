@@ -214,3 +214,38 @@ BEGIN
 END
 
 EXEC sp_delete_employee @employee_id = 1;
+
+CREATE PROCEDURE sp_delete_role_permission
+    @role_id INT,
+    @permission_id INT
+AS
+BEGIN
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_roles WHERE id = @role_id)
+    BEGIN
+        RAISERROR ('Role not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_role_permissions WHERE permission = @permission_id)
+    BEGIN
+        RAISERROR ('Permission not found', 16, 1);
+        RETURN;
+    END
+
+
+    IF NOT EXISTS (SELECT 1 FROM tbl_role_permissions WHERE id = @role_id AND permission = @permission_id)
+    BEGIN
+        RAISERROR ('Role permission not found', 16, 1);
+        RETURN;
+    END
+
+
+    DELETE FROM tbl_role_permissions
+    WHERE id = @role_id AND permission = @permission_id;
+
+
+    SELECT 'Role permission deleted successfully' AS message;
+END
+EXEC sp_delete_role_permission @role_id, @permission_id = 1;
