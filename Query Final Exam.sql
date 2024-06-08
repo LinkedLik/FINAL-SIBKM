@@ -141,11 +141,22 @@ ALTER TABLE tbl_employees ADD CONSTRAINT check_email CHECK(dbo.func_email_format
 
 ALTER TABLE tbl_account ADD CONSTRAINT check_password CHECK(dbo.func_password_policy(password) = 1);
 
-CREATE PROCEDURE usp_login @user VARCHAR(25), @password VARCHAR(255)
+CREATE PROCEDURE usp_login 
+@user VARCHAR(25), 
+@password VARCHAR(255)
 AS
-SELECT username, password
-FROM tbl_account
-WHERE username = @user AND password = @password;
+BEGIN
+IF EXISTS (SELECT 1 FROM tbl_account WHERE username = @user AND password = @password)
+BEGIN 
+PRINT 'Login Sucess'
+END
+ELSE 
+BEGIN
+PRINT 'Account not registered'
+END
+END
+
+DROP PROCEDURE usp_login;
 
 EXEC usp_login @user = 'admin', @password = 'password';
 
@@ -313,6 +324,7 @@ FROM tbl_job_histories
 INNER JOIN INSERTED i ON tbl_job_histories.employee = i.id
 END
 
+/* Over Engineered
 CREATE FUNCTION func_otp_generate(
 @otp INT
 )
@@ -329,4 +341,114 @@ END
 RETURN @digit;
 END;
 
+
+CREATE FUNCTION func_otp_generate()
+RETURNS INT
+AS
+BEGIN
+    DECLARE @otp INT;
+    EXEC sp_executesql N'SET @otp = FLOOR(RAND() * 900000) + 100000;', N'@otp INT OUTPUT', @otp OUTPUT;
+    RETURN @otp;
+END;
+
+*/
+
+CREATE FUNCTION dbo.func_otp_generate(@seed INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @otp INT;
+    SET @otp = FLOOR(ABS(CHECKSUM(@seed)) % 900000) + 100000;
+    RETURN @otp;
+END;
+
+DECLARE @seed INT = DATEPART(ms, GETDATE());
+SELECT dbo.func_otp_generate(@seed) AS OTP;
+
+DROP FUNCTION dbo.func_otp_generate;
+
 SELECT * FROM tbl_account;
+SELECT * FROM tbl_employees;
+
+CREATE PROCEDURE dept_delete
+@id INT
+AS
+BEGIN
+IF EXISTS(SELECT 1 FROM tbl_departments WHERE id = @id)
+BEGIN 
+DELETE FROM tbl_departments
+WHERE id = id
+END
+ELSE
+BEGIN
+PRINT 'Data Departement tidak ada'
+END
+END
+
+CREATE PROCEDURE usp_forgot_password
+@email VARCHAR(25),
+@newpassword VARCHAR(255),
+@confirmpassword VARCHAR(255),
+@otp INT
+AS
+BEGIN
+IF EXISTS(SELECT 1 FROM tbl_employees WHERE email = @email)
+BEGIN
+	IF EXISTS(SELECT 1 FROM tbl_account)
+	BEGIN
+	IF @newpassword = @confirmpassword
+	BEGIN
+	IF EXISTS(SELECT 1 FROM tbl_account WHERE otp = @otp)
+	BEGIN
+	IF EXISTS(SELECT 1 FROM tbl_account WHERE is_expired = 0)
+	UPDATE tbl_account
+	SET password = @confirmpassword, is_used = 1
+	ELSE
+	PRINT 'OTP Expired'
+	END
+	ELSE
+	PRINT 'OTP Already Used'
+	END
+	ELSE
+	PRINT 'OTP is Incorrect'
+	END
+	ELSE
+	PRINT 'Password not Match'
+	END
+	ELSE
+	PRINT 'Account not Registered'
+END
+
+DROP PROCEDURE usp_forgot_password;
+
+EXEC usp_login @user = 'bpeasee0', @password =  'cE2#e,z,G/?';
+EXEC usp_login @user = 'bpeasee0', @password =  'cE2#e,z,G/';
+
+select * from tbl_account;
+SELECT * FROM tbl_jobs;
+select * from tbl_employees;
+EXEC usp_forgot_password @email = 'ffeldberg0@comsenz.com', @newpassword = 'test', @confirmpassword = 'tes', @otp = '2013';
+
+
+UPDATE tbl_employees
+SET job = 1103
+WHERE ID = 100012;
+
+select * from tbl_job_histories;
+
+CREATE PROCEDURE permission_regis
+@id INT,
+@name VARCHAR(100)
+AS
+BEGIN
+IF EXISTS(SELECT 1 FROM tbl_permissions WHERE id = @id)
+BEGIN
+PRINT 'Permissions Already Exists'
+END
+ELSE
+BEGIN
+INSERT INTO tbl_permissions VALUES (@name)
+END
+END
+
+SELECT * FROM tbl_permissions;
