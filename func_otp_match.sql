@@ -12,4 +12,3 @@ BEGIN
     RETURN @result;
 END;
 
-SELECT [dbo].[func_otp_match]('123456', '123456') AS IsMatch;
