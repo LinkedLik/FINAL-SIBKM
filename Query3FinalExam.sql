@@ -222,6 +222,32 @@ UPDATE tbl_roles
 END
 
 
+CREATE PROCEDURE sp_generate_otp
+    @email nvarchar(50)
+AS
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM dbo.tbl_employees WHERE email = @email)
+    BEGIN
+        RAISERROR ('Email does not exist', 16, 1)
+        RETURN;
+    END
+
+    DECLARE @otp int
+    DECLARE @seed INT = DATEPART(ms, GETDATE());
+    SET @otp = dbo.func_otp_generate(@seed)
+
+    UPDATE a
+    SET a.otp = @otp, a.is_expired = 0, a.is_used = DATEADD(MINUTE, 10, GETDATE())
+    FROM dbo.tbl_account a
+    INNER JOIN dbo.tbl_employees e ON a.id = e.id
+    WHERE e.email = @email
+
+    --SET @new_otp = @otp
+    --SET @expired_time = DATEADD(MINUTE, 10, GETDATE())
+	SELECT @otp AS OTP
+END
+
+
 CREATE VIEW AccountRoles AS
 SELECT dbo.tbl_account.id AS [Account ID], dbo.tbl_roles.name AS Role, dbo.tbl_permissions.name AS Permissions
 FROM     dbo.tbl_account INNER JOIN
